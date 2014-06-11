@@ -163,7 +163,7 @@ getStats('prod',urlRequest,responseFile);
 getStats('api',urlRequest2, responseFile2);
 
 // all environments
-app.set('port', process.env.PORT || 8082);
+app.set('port', process.env.PORT || 8080);
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 app.use(express.favicon());
@@ -190,11 +190,7 @@ app.get('/rest/api/', function(req, res) {
 	var svname = req.query['svname'];
 	var collection_name = req.query['box'] + '_' + req.query['pxname'];
 	var collection = db.collection(collection_name);
-	var date = new Date();
-	var cur_date = Date.parse(date);
-	date.setHours(00,00,00);
-	var pre_date = Date.parse(date);
-	collection.find({"svname" : svname, "timestamp" : { $gt: pre_date, $lt : cur_date }}).toArray(function(err, result){
+	collection.find({"svname" : svname}).toArray(function(err, result){
 		if(err){
 			console.log(new Date() + ' ERROR: ' + 'err');
 			return;
