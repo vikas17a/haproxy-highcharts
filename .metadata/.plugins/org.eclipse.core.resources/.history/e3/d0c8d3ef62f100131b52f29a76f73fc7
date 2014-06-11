@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+	<!--script src="http://code.highcharts.com/highcharts.js"></script-->
+	<script src="http://code.highcharts.com/stock/highstock.js"></script>
+	<script src="http://code.highcharts.com/stock/modules/exporting.js"></script>
+  	<script>
+  		var timer;
+		function chart(url) {
+			$.getJSON(url, function(data) {
+			// Create the chart
+				Highcharts.setOptions({
+        			global: {
+        				useUTC : false,
+            			//timezoneOffset: 6 * 60 + 30
+        			}
+    			});
+				$('#container').highcharts('StockChart', {
+					chart: {
+						type : 'spline'
+					},
+					plotOptions: {
+            			series: {
+                			color: 'Green'
+            			}
+        			},
+					xAxis: {
+            			type: 'datetime',
+            			range: 3600 * 100,
+            			
+						title : {
+							text : 'Time line'
+						},
+						labels: {
+        					formatter: function() {
+             					return Highcharts.dateFormat("%H:%M", this.value);
+        					}
+    					}
+        			},
+        			yAxis : {
+        				opposite : false,
+        				title : {
+        					text : 'Session Rate'
+        				}
+        			},
+					title : {
+						text : 'Stats'
+					},
+				    legend: {
+	    				enabled: true,
+	    				
+	    			},
+					series : [data]
+				});
+			});
+			timer = setTimeout(function(){
+				chart(url);
+			},7000);
+		}
+		function stop(){
+			alert('Stop Reload');
+			clearTimeout(timer);
+		}			
+	</script>
+  </head>
+  <body>
+  	<button onClick="stop();">Stop Reload</button>
+  	<select id="prod" onChange=chart('http://localhost:8082/rest/api/?pxname=healthkart&box=prod&svname='+this.value);>
+  		<option>Production Boxes</option>
+  		<option value="vmn-265-P">VMN-265-P</option>
+  		<option value="vmn-400-Q">VMN-400-Q</option>
+  		<option value="vmn-396-R">VMN-396-R</option>
+  		<option value="vmn-339-S">VMN-339-S</option>
+  		<option>------------------</option>
+  	</select>
+  	<!--button onClick="chart('http://localhost:8082/rest/api/?pxname=healthkart&box=prod&svname=vmn-265-P');">VMN-265-P</button-->	
+	<div id="container" style="width:100%; height:400px;"></div>
+  </body>
+</html>

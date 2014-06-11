@@ -1,0 +1,6 @@
+# pxname,svname,qcur,qmax,scur,smax,slim,stot,bin,bout,dreq,dresp,ereq,econ,eresp,wretr,wredis,status,weight,act,bck,chkfail,chkdown,lastchg,downtime,qlimit,pid,iid,sid,throttle,lbtot,tracked,type,rate,rate_lim,rate_max,check_status,check_code,check_duration,hrsp_1xx,hrsp_2xx,hrsp_3xx,hrsp_4xx,hrsp_5xx,hrsp_other,hanafail,req_rate,req_rate_max,req_tot,cli_abrt,srv_abrt,comp_in,comp_out,comp_byp,comp_rsp,
+http-in,FRONTEND,,,5,56,5000,256812,70558922,4014649139,0,0,93,,,,,OPEN,,,,,,,,,1,1,0,,,,0,32,0,188,,,,0,256517,0,122,140,28,,32,187,256812,,,0,0,0,0,
+healthkart,spkd-0210,0,0,2,14,,84900,22928196,1345339082,,0,,0,8,192,32,UP,1,1,0,2,1,4101,22,,1,2,1,,84708,,2,9,,76,L7OK,200,1,270,84611,0,0,55,0,0,,,,0,8,,,,,
+healthkart,spkd-0211,0,0,0,21,,84919,22915163,1314126621,,0,,0,21,219,16,UP,1,1,0,2,1,4056,19,,1,2,2,,84700,,2,10,,62,L7OK,200,1,243,84592,0,24,47,0,0,,,,0,20,,,,,
+healthkart,vmn-416,0,0,2,27,,84444,22747464,1330654109,,0,,0,1,306,51,UP,1,1,0,2,1,3390,38,,1,2,3,,84132,,2,10,,77,L7OK,200,1,247,84045,0,3,36,0,0,,,,0,0,,,,,
+healthkart,BACKEND,0,0,4,56,500,253447,68590823,3990119812,0,0,,0,30,717,99,UP,3,3,0,,0,4461,0,,1,2,0,,253540,,1,30,,186,,,,0,253248,0,27,140,28,,,,,0,28,0,0,0,0,

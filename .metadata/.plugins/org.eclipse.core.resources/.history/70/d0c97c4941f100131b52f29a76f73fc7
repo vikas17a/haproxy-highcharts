@@ -1,0 +1,208 @@
+/**
+ * Module dependencies.
+ */
+
+var express = require('express'), routes = require('./routes'), user = require('./routes/user'), http = require('http'), path = require('path'), cp = require('child_process'), fs = require('fs'), Converter = require('csvtojson').core.Converter, eventEmitter = require('events').EventEmitter;
+
+var app = express();
+
+var MongoClient = require('mongodb').MongoClient;
+var eventEmmit = new eventEmitter;
+var db;
+MongoClient.connect('mongodb://127.0.0.1:27017/stats', function(err, database) {
+	if (err)
+		throw err;
+	db = database;
+});
+var responseFile = "prod-haproxy";
+var responseFile2 = "api-haproxy";
+var urlRequest = "http://healthkart:adw38&6cdQE@healthkart.com/haproxy?stats;csv;norefresh";
+var urlRequest2 = "http://healthkart:adw38&6cdQE@api.healthkart.com/haproxy?stats;csv;norefresh";
+
+function getStats(cluster, urlRequest, responseFile) {
+	http.get(
+			urlRequest,
+			function(res) {
+				console.log(new Date() + " GET response of haproxy: "
+						+ res.statusCode);
+				res.setEncoding('utf8');
+				try {
+					fs.unlinkSync(responseFile);
+				} catch (err) {
+					console.log(new Date()
+							+ " Was unable to locate or delete file");
+				}
+				console.log(new Date() + ' Old txt file deleted');
+				res.on('data',
+						function(stats) {
+							try {
+								fs.appendFileSync(responseFile, stats);
+							} catch (err) {
+								console.log(new Date()
+										+ " File not appended properly");
+							}
+						});
+				res.on('end', function() {
+					parsingJson(cluster, responseFile);
+				});
+			}).on('error', function(e) {
+		console.log(new Date() + " Got error: " + e);
+	});
+	setTimeout(function() {
+		getStats(cluster, urlRequest, responseFile);
+	}, 10000);
+}
+
+function parsingJson(cluster, responseFile) {
+	function CSVToArray(strData, strDelimiter) {
+		// Check to see if the delimiter is defined. If not,
+		// then default to comma.
+		strDelimiter = (strDelimiter || ",");
+		// Create a regular expression to parse the CSV values.
+		var objPattern = new RegExp((
+		// Delimiters.
+		"(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
+		// Quoted fields.
+		"(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
+		// Standard fields.
+		"([^\"\\" + strDelimiter + "\\r\\n]*))"), "gi");
+		// Create an array to hold our data. Give the array
+		// a default empty first row.
+		var arrData = [ [] ];
+		// Create an array to hold our individual pattern
+		// matching groups.
+		var arrMatches = null;
+		// Keep looping over the regular expression matches
+		// until we can no longer find a match.
+		while (arrMatches = objPattern.exec(strData)) {
+			// Get the delimiter that was found.
+			var strMatchedDelimiter = arrMatches[1];
+			// Check to see if the given delimiter has a length
+			// (is not the start of string) and if it matches
+			// field delimiter. If id does not, then we know
+			// that this delimiter is a row delimiter.
+			if (strMatchedDelimiter.length
+					&& (strMatchedDelimiter != strDelimiter)) {
+				// Since we have reached a new row of data,
+				// add an empty row to our data array.
+				arrData.push([]);
+			}
+			// Now that we have our delimiter out of the way,
+			// let's check to see which kind of value we
+			// captured (quoted or unquoted).
+			if (arrMatches[2]) {
+				// We found a quoted value. When we capture
+				// this value, unescape any double quotes.
+				var strMatchedValue = arrMatches[2].replace(new RegExp("\"\"",
+						"g"), "\"");
+			} else {
+				// We found a non-quoted value.
+				var strMatchedValue = arrMatches[3];
+			}
+			// Now that we have our value string, let's add
+			// it to the data array.
+			arrData[arrData.length - 1].push(strMatchedValue);
+		}
+		// Return the parsed data.
+		return (arrData);
+	}
+
+	function CSV2JSON(csv) {
+		var array = CSVToArray(csv);
+		var objArray = [];
+		for (var i = 1; i < array.length; i++) {
+			objArray[i - 1] = {};
+			for (var k = 0; k < array[0].length && k < array[i].length; k++) {
+				var key = array[0][k];
+				objArray[i - 1][key] = array[i][k]
+			}
+		}
+
+		var json = JSON.stringify(objArray);
+		var str = json.replace(/},/g, "},\r\n");
+
+		eventEmmit.emit('json_parsed');
+		return str;
+	}
+
+	fs.readFile(responseFile, 'utf8', function(err, data) {
+		if (err) {
+			return console.log(err);
+		}
+		var myObj = CSV2JSON(data);
+		var jsonObj = eval('(' + myObj + ')');
+
+		eventEmmit.on('json_parsed', addTodb);
+		var index = 0;
+		function addTodb() {
+			if (!jsonObj[index]) {
+				return;
+			}
+			var px_names = jsonObj[index]["# pxname"];
+			var orignal_cluster = px_names.replace(/-/g, "_");
+			jsonObj[index]["timestamp"] = Date.now();
+			var cluster_name = cluster + '_' + orignal_cluster;
+			var collection = db.collection(cluster_name);
+			console.log(cluster_name);
+			collection.insert(jsonObj[index], function(error, result) {
+				if (error) {
+					console.log(new Date() + ' ERROR INSERTION: ' + error);
+				} else {
+					console.log(new Date() + ' Data inserted in '
+							+ cluster_name + ' collection with result '
+							+ result);
+					index++;
+					addTodb(index);
+				}
+			});
+		}
+	});
+}
+
+// getStats('prod',urlRequest,responseFile);
+// getStats('api',urlRequest2, responseFile2);
+
+// all environments
+app.set('port', process.env.PORT || 8082);
+app.set('views', __dirname + '/views');
+app.set('view engine', 'ejs');
+app.use(express.favicon());
+app.use(express.logger('dev'));
+app.use(express.bodyParser());
+app.use(express.methodOverride());
+app.use(app.router);
+app.use(express.static(path.join(__dirname, 'public')));
+app.engine('html', require('ejs').renderFile);
+
+// development only
+if ('development' == app.get('env')) {
+	app.use(express.errorHandler());
+}
+
+app.get('/', function(req, res) {
+	res.render("index.html");
+});
+
+app.post('/rest/api/', function(req, res) {
+	console.log(req.body.pxname);
+	console.log(req.body.box);
+	console.log(req.body.svname);
+	var svname = req.body.svname;
+	var collection_name = req.body.box + '_' + req.body.pxname;
+	var collection = db.collection(collection_name);
+	collection.find({"svname" : svname}).toArray(function(err, result){
+		if(err){
+			console.log(new Date() + ' ERROR: ' + 'err');
+			return;
+		}
+		var obj = { "name" : svname};
+		for(var index in result){
+		
+		}
+		res.send(obj);
+	});
+});
+
+http.createServer(app).listen(app.get('port'), function() {
+	console.log('Express server listening on port ' + app.get('port'));
+});
