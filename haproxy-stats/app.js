@@ -8,6 +8,7 @@ var app = express();
 
 var MongoClient = require('mongodb').MongoClient;
 var eventEmmit = new eventEmitter;
+eventEmmit.setMaxListeners(0);
 var db;
 MongoClient.connect('mongodb://127.0.0.1:27017/stats', function(err, database) {
 	if (err)
@@ -108,7 +109,7 @@ function CSVToArray(strData, strDelimiter) {
 	return (arrData);
 }
 
-function CSV2JSON(csv) {
+function CSV2JSON(csv,key) {
 	var array = CSVToArray(csv);
 	var objArray = [];
 	for (var i = 1; i < array.length; i++) {
@@ -121,25 +122,23 @@ function CSV2JSON(csv) {
 
 	var json = JSON.stringify(objArray);
 	var str = json.replace(/},/g, "},\r\n");
-
-	eventEmmit.emit('json_parsed');
+	eventEmmit.emit('json_parsed_zero');
 	return str;
 }
 
 /** *****Parsing of csv to json*************** */
 
-var rendObj = {}; // The object to be rendered at on live request
+// The object to be rendered at on live request
 
 function parsingJson(cluster, responseFile) {
-
 	fs.readFile(responseFile, 'utf8', function(err, data) {
 		if (err) {
 			return console.log(err);
 		}
 		try {
-			var myObj = CSV2JSON(data);
+			var myObj = CSV2JSON(data,0);
 			var jsonObj = eval('(' + myObj + ')');
-			eventEmmit.on('json_parsed', addTodb);
+			eventEmmit.once('json_parsed_zero', addTodb);
 			var index = 0;
 			function addTodb() {
 				if (!jsonObj[index]) {
@@ -148,7 +147,6 @@ function parsingJson(cluster, responseFile) {
 				var px_names = jsonObj[index]["# pxname"];
 				var orignal_cluster = px_names.replace(/-/g, "_");
 				jsonObj[index]["timestamp"] = Date.now();
-				rendObj = jsonObj;
 				var cluster_name = cluster + '_' + orignal_cluster;
 				var collection = db.collection(cluster_name);
 				console.log(cluster_name);
@@ -223,14 +221,31 @@ app.get('/rest/live/', function(req, res) {
 	console.log('request recived live');
 	var svname = req.query['svname'];
 	var requestFile = req.query['box'] + "-haproxy";
-	var sendObj = {};
-	for ( var index in rendObj) {
-		if (rendObj[index]['# pxname'] == req.query['pxname']) {
-			sendObj['timestamp'] = Date.now();
-			sendObj['rate'] = parseInt(rendObj[index]['rate']);
+	console.log(requestFile);
+	fs.readFile(requestFile, 'utf8', function(err, data) {
+		if (err) {
+			return console.log(err);
 		}
-	}
-	res.send(sendObj);
+		try {
+			var sendObj = {};
+			var myObj = CSV2JSON(data,1);
+			console.log(myObj);
+			var rendObj = eval('(' + myObj + ')');
+			eventEmmit.once('json_parsed_zero', function(){
+					console.log('Hello');
+			});
+			for ( var index in rendObj) {
+				if (rendObj[index]['# pxname'] == req.query['pxname'] && rendObj[index]["svname"] == req.query['svname']) {
+					sendObj['timestamp'] = Date.now();
+					sendObj['rate'] = parseInt(rendObj[index]['rate']);
+				}
+			}
+			res.send(sendObj);
+		}
+		catch(err){
+			console.log(err);
+		}
+	});
 });
 
 http.createServer(app).listen(app.get('port'), function() {
