@@ -54,7 +54,7 @@ function getStats(cluster, urlRequest, responseFile) {
 	}, 10000);
 }
 
-/**** Parsing of csv to json ***************/
+/** ** Parsing of csv to json ************** */
 
 function CSVToArray(strData, strDelimiter) {
 	// Check to see if the delimiter is defined. If not,
@@ -83,8 +83,7 @@ function CSVToArray(strData, strDelimiter) {
 		// (is not the start of string) and if it matches
 		// field delimiter. If id does not, then we know
 		// that this delimiter is a row delimiter.
-		if (strMatchedDelimiter.length
-				&& (strMatchedDelimiter != strDelimiter)) {
+		if (strMatchedDelimiter.length && (strMatchedDelimiter != strDelimiter)) {
 			// Since we have reached a new row of data,
 			// add an empty row to our data array.
 			arrData.push([]);
@@ -95,8 +94,8 @@ function CSVToArray(strData, strDelimiter) {
 		if (arrMatches[2]) {
 			// We found a quoted value. When we capture
 			// this value, unescape any double quotes.
-			var strMatchedValue = arrMatches[2].replace(new RegExp("\"\"",
-					"g"), "\"");
+			var strMatchedValue = arrMatches[2].replace(
+					new RegExp("\"\"", "g"), "\"");
 		} else {
 			// We found a non-quoted value.
 			var strMatchedValue = arrMatches[3];
@@ -127,50 +126,53 @@ function CSV2JSON(csv) {
 	return str;
 }
 
-/*******Parsing of csv to json****************/
+/** *****Parsing of csv to json*************** */
+
+var rendObj = {}; // The object to be rendered at on live request
 
 function parsingJson(cluster, responseFile) {
-	
+
 	fs.readFile(responseFile, 'utf8', function(err, data) {
 		if (err) {
 			return console.log(err);
 		}
-		try{
+		try {
 			var myObj = CSV2JSON(data);
-		}
-		catch(err){
-			console.log(new Date() + ' ERROR : ' + err);
-		}
-		var jsonObj = eval('(' + myObj + ')');
-		eventEmmit.on('json_parsed', addTodb);
-		var index = 0;
-		function addTodb() {
-			if (!jsonObj[index]) {
-				return;
-			}
-			var px_names = jsonObj[index]["# pxname"];
-			var orignal_cluster = px_names.replace(/-/g, "_");
-			jsonObj[index]["timestamp"] = Date.now();
-			var cluster_name = cluster + '_' + orignal_cluster;
-			var collection = db.collection(cluster_name);
-			console.log(cluster_name);
-			collection.insert(jsonObj[index], function(error, result) {
-				if (error) {
-					console.log(new Date() + ' ERROR INSERTION: ' + error);
-				} else {
-					console.log(new Date() + ' Data inserted in '
-							+ cluster_name + ' collection with result '
-							+ result);
-					index++;
-					addTodb(index);
+			var jsonObj = eval('(' + myObj + ')');
+			eventEmmit.on('json_parsed', addTodb);
+			var index = 0;
+			function addTodb() {
+				if (!jsonObj[index]) {
+					return;
 				}
-			});
+				var px_names = jsonObj[index]["# pxname"];
+				var orignal_cluster = px_names.replace(/-/g, "_");
+				jsonObj[index]["timestamp"] = Date.now();
+				rendObj = jsonObj;
+				var cluster_name = cluster + '_' + orignal_cluster;
+				var collection = db.collection(cluster_name);
+				console.log(cluster_name);
+				collection.insert(jsonObj[index], function(error, result) {
+					if (error) {
+						console.log(new Date() + ' ERROR INSERTION: ' + error);
+					} else {
+						console.log(new Date() + ' Data inserted in '
+								+ cluster_name + ' collection with result '
+								+ result);
+						index++;
+						addTodb(index);
+					}
+				});
+			}
+
+		} catch (err) {
+			console.log(new Date() + ' ERROR : ' + err);
 		}
 	});
 }
 
-getStats('prod',urlRequest,responseFile);
-getStats('api',urlRequest2, responseFile2);
+getStats('prod', urlRequest, responseFile);
+getStats('api', urlRequest2, responseFile2);
 
 // all environments
 app.set('port', process.env.PORT || 8080);
@@ -197,46 +199,38 @@ app.get('/rest/load/', function(req, res) {
 	var svname = req.query['svname'];
 	var collection_name = req.query['box'] + '_' + req.query['pxname'];
 	var collection = db.collection(collection_name);
-	collection.find({"svname" : svname}).toArray(function(err, result){
-		if(err){
+	collection.find({
+		"svname" : svname
+	}).toArray(function(err, result) {
+		if (err) {
 			console.log(new Date() + ' ERROR: ' + 'err');
 			return;
 		}
-		var obj = { "name" : svname , "data" : []};
-		for(var index in result){
+		var obj = {
+			"name" : svname,
+			"data" : []
+		};
+		for ( var index in result) {
 			var rate = parseInt(result[index]["rate"]);
 			var date = parseInt(result[index]["timestamp"]);
-			obj["data"].push([date, rate]);
+			obj["data"].push([ date, rate ]);
 		}
 		res.send(obj);
 	});
 });
 
-app.get('/rest/live/', function(req,res){
+app.get('/rest/live/', function(req, res) {
 	console.log('request recived live');
 	var svname = req.query['svname'];
 	var requestFile = req.query['box'] + "-haproxy";
-	fs.readFile(requestFile, 'utf8', function(err, data) {
-		var jsonObj;
-		if (err) {
-			return console.log(err);
+	var sendObj = {};
+	for ( var index in rendObj) {
+		if (rendObj[index]['# pxname'] == req.query['pxname']) {
+			sendObj['timestamp'] = Date.now();
+			sendObj['rate'] = parseInt(rendObj[index]['rate']);
 		}
-		try{
-			var myObj = CSV2JSON(data);
-			jsonObj = eval('(' + myObj + ')');
-			var rendObj = {};
-			for(var index in jsonObj){
-				if(jsonObj[index]['# pxname'] == req.query['pxname']){
-					rendObj['timestamp'] = Date.now();
-					rendObj['rate'] = parseInt(jsonObj[index]['rate']);
-				}
-			}
-			res.send(rendObj);
-		}
-		catch(err){
-			console.log(new Date() + ' ERROR : ' + err);
-		}
-	});
+	}
+	res.send(sendObj);
 });
 
 http.createServer(app).listen(app.get('port'), function() {
