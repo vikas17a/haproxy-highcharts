@@ -2,25 +2,29 @@
  * Module dependencies.
  */
 
-var express = require('express'), routes = require('./routes'), user = require('./routes/user'), http = require('http'), path = require('path'), cp = require('child_process'), fs = require('fs'), Converter = require('csvtojson').core.Converter, eventEmitter = require('events').EventEmitter;
+var express = require('express'), routes = require('./routes'), user = require('./routes/user'), http = require('http'), path = require('path'), cp = require('child_process'), fs = require('fs'), Converter = require('csvtojson').core.Converter, eventEmitter = require('events').EventEmitter, mysql = require('mysql');
 
 var app = express();
 
+// MongoDB connection
 var MongoClient = require('mongodb').MongoClient;
 var eventEmmit = new eventEmitter;
-eventEmmit.setMaxListeners(0);
 var db;
+// Mysql connection
+
+eventEmmit.setMaxListeners(0);
+
 MongoClient.connect('mongodb://127.0.0.1:27017/stats', function(err, database) {
 	if (err)
 		throw err;
 	db = database;
 });
-var responseFile = "prod-haproxy";
+/*var responseFile = "prod-haproxy";
 var responseFile2 = "api-haproxy";
 
 var urlRequest = "http://healthkart:adw38&6cdQE@healthkart.com/haproxy?stats;csv;norefresh";
 var urlRequest2 = "http://healthkart:adw38&6cdQE@api.healthkart.com/haproxy?stats;csv;norefresh";
-
+*/
 function getStats(cluster, urlRequest, responseFile) {
 	http.get(
 			urlRequest,
@@ -50,9 +54,9 @@ function getStats(cluster, urlRequest, responseFile) {
 			}).on('error', function(e) {
 		console.log(new Date() + " Got error: " + e);
 	});
-	setTimeout(function() {
-		getStats(cluster, urlRequest, responseFile);
-	}, 10000);
+	//setTimeout(function() {
+	//	getStats(cluster, urlRequest, responseFile);
+	//}, 10000);
 }
 
 /** ** Parsing of csv to json ************** */
@@ -109,7 +113,7 @@ function CSVToArray(strData, strDelimiter) {
 	return (arrData);
 }
 
-function CSV2JSON(csv,key) {
+function CSV2JSON(csv, key) {
 	var array = CSVToArray(csv);
 	var objArray = [];
 	for (var i = 1; i < array.length; i++) {
@@ -129,14 +133,13 @@ function CSV2JSON(csv,key) {
 /** *****Parsing of csv to json*************** */
 
 // The object to be rendered at on live request
-
 function parsingJson(cluster, responseFile) {
 	fs.readFile(responseFile, 'utf8', function(err, data) {
 		if (err) {
 			return console.log(err);
 		}
 		try {
-			var myObj = CSV2JSON(data,0);
+			var myObj = CSV2JSON(data, 0);
 			var jsonObj = eval('(' + myObj + ')');
 			eventEmmit.once('json_parsed_zero', addTodb);
 			var index = 0;
@@ -169,8 +172,8 @@ function parsingJson(cluster, responseFile) {
 	});
 }
 
-getStats('prod', urlRequest, responseFile);
-getStats('api', urlRequest2, responseFile2);
+//getStats('prod', urlRequest, responseFile);
+//getStats('api', urlRequest2, responseFile2);
 
 // all environments
 app.set('port', process.env.PORT || 8080);
@@ -195,13 +198,14 @@ app.get('/', function(req, res) {
 
 app.get('/rest/load/', function(req, res) {
 	var svname = req.query['svname'];
-	var collection_name = req.query['box'] + '_' + req.query['pxname'];
+	var orignal_cluster = req.query['pxname'].replace(/-/g, "_");
+	var collection_name = req.query['box'] + '_' + orignal_cluster;
 	var collection = db.collection(collection_name);
 	collection.find({
 		"svname" : svname
 	}).toArray(function(err, result) {
 		if (err) {
-			console.log(new Date() + ' ERROR: ' + 'err');
+			console.log(new Date() + ' ERROR: ' + err);
 			return;
 		}
 		var obj = {
@@ -228,25 +232,128 @@ app.get('/rest/live/', function(req, res) {
 		}
 		try {
 			var sendObj = {};
-			var myObj = CSV2JSON(data,1);
+			var myObj = CSV2JSON(data, 1);
 			console.log(myObj);
 			var rendObj = eval('(' + myObj + ')');
-			eventEmmit.once('json_parsed_zero', function(){
-					console.log('Hello');
+			eventEmmit.once('json_parsed_zero', function() {
+				console.log('Hello');
 			});
 			for ( var index in rendObj) {
-				if (rendObj[index]['# pxname'] == req.query['pxname'] && rendObj[index]["svname"] == req.query['svname']) {
+				if (rendObj[index]['# pxname'] == req.query['pxname']
+						&& rendObj[index]["svname"] == req.query['svname']) {
 					sendObj['timestamp'] = Date.now();
 					sendObj['rate'] = parseInt(rendObj[index]['rate']);
 				}
 			}
 			res.send(sendObj);
-		}
-		catch(err){
+		} catch (err) {
 			console.log(err);
 		}
 	});
 });
+
+app.get('/new/', function(req, res) {
+	res.render('add_new.html');
+});
+
+var mysql_connection;
+function connect_to_mysql() {
+	mysql_connection = mysql.createConnection({
+		host : 'localhost',
+		user : 'root',
+		password : '',
+		database : 'haproxy_nodejs'
+	});
+}
+
+app.get('/rest/new/', function(req, res) {
+	var url = req.query["url"];
+	var name = req.query["name"];
+	var svname = req.query["svname"];
+	var pxname = req.query["pxname"];
+	connect_to_mysql();
+	mysql_connection.connect();
+	if (url != '' && name != '' && svname != '') {
+		var query = 'INSERT INTO url_haproxy VALUES(\'\',?,?,?,?)';
+		var insert = [ url, pxname, name, svname ];
+		mysql_connection.query(query, insert, function(err, results) {
+			if (err) {
+				console.log(new Date() + 'ERROR : ' + err);
+				res.send('Not added sorry :(');
+			} else {
+				console.log(new Date() + results);
+				res.send('<script>window.location=\'/\';</script>');
+			}
+			mysql_connection.end();
+		});
+	} else {
+		mysql_connection.end();
+	}
+});
+
+app.get('/rest/render/', function(req, res) {
+	var name = req.query['name'];
+	var pxname = req.query['pxname'];
+	var level = req.query['level'];
+	var query;
+	connect_to_mysql();
+	mysql_connection.connect();
+	if(level == 0){
+		query = "SELECT DISTINCT(name) from url_haproxy";
+		mysql_connection.query(query, function(err, rows){
+			if(err)
+				mysq_connection.end();
+			else
+				res.send(rows);
+		});
+	}
+	else if (level == 1){
+		query = "SELECT DISTINCT(pxname) from url_haproxy where name = ?";
+		var params = [name];
+		mysql_connection.query(query, params, function(err, rows){
+			if(err){
+				mysq_connection.end();
+			}
+			else{
+				res.send(rows);
+			}
+		});
+	}
+	else if (level == 2){
+		query = "SELECT DISTINCT(svname) from url_haproxy where name = ? and pxname = ?";
+		var params = [name, pxname];
+		mysql_connection.query(query, params, function(err, rows){
+			if(err){
+				mysq_connection.end();
+			}
+			else{
+				res.send(rows);
+			}
+		});
+	}
+	
+});
+
+app.get('/test/', function(req, res){
+	res.render('test_index.html');
+});
+
+function getData(){
+	connect_to_mysql();
+	var query = "SELECT DISTINCT(name), url FROM url_haproxy";
+	mysql_connection.query(query, function(err, rows){
+		if(err)
+			console.log(err);
+		else
+			for(var index in rows){
+				getStats(rows[index]['name'], rows[index]['url'], rows[index]['name'] + '-haproxy');
+			}
+		mysql_connection.end();
+	});
+	setTimeout(getData, 10000);	
+}
+
+getData();
 
 http.createServer(app).listen(app.get('port'), function() {
 	console.log('Express server listening on port ' + app.get('port'));

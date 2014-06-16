@@ -1,0 +1,28 @@
+<html>
+	<head>
+		<title>Add new haproxy</title>
+		<style>
+			input{
+				width: 400px;
+			}
+			input[type='submit']{
+				width: 100px;
+			}
+			label{
+				width: 300px;
+				display:inline-block;
+				font-style:italic;
+			}
+		</style>
+	</head>
+	<body>
+		<h3>Add new cluster</h3>
+		<form action="/rest/new/" method="get">
+			<label>URL : </label><input type="text" name="url" placeholder="http://uname:pwd@address"><br>
+			<label>Name : </label><input type="text" name="name" placeholder="Ex: api,prod,admin etc."><br>
+			<label>Proxy Name : </label><input type="text" name="pxname" placeholder="Ex: healthkart-https, healthkart_ etc."><br>
+			<label>Server Name : </label><input type="text" name="svname" placeholder="Ex: vmn-415"><br>
+			<input type="submit" value="Add">
+		</form>
+	</body>	
+</html>

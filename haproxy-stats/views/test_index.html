@@ -1,0 +1,57 @@
+<html>
+<head>
+<script
+	src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript">
+	var name='', pxname='', svname='';
+	function dosomething(level, name, pxname,id) {
+		$.getJSON('/rest/render/?level='+level+'&name='+name+'&pxname='+pxname, function(data) {
+			var select = document.getElementById(id);
+			for ( var index in data) {
+				for(var index2 in data[index]){
+					var option = document.createElement('option');
+					option.value = data[index][index2];
+					option.text = data[index][index2];
+					select.add(option);
+				}
+			}
+		});
+	}
+	function removeOptions(id){
+		var select = document.getElementById(id);
+		var length = select.options.length;
+		for (i = 1; i < length; i++) {
+		  select.options[i] = null;
+		}		
+	}
+	function getpxname(name) {
+		removeOptions('pxname');
+		this.name = name;
+		dosomething(1,name,pxname,'pxname');
+	}
+	function getsvname(pxname) {
+		removeOptions('svname');
+		this.pxname = pxname;
+		dosomething(2,name,pxname,'svname');
+	}
+	function drawGraph(svname) {
+		this.svname = svname;
+	}
+	dosomething(0,name,pxname,'name');
+</script>
+</head>
+<body>
+	<h3>Select Name</h3>
+	<select id="name" onChange="getpxname(this.value);">
+	<option>Name</option>
+	</select>
+	<h3>Select Proxy Name</h3>
+	<select id="pxname" onChange="getsvname(this.value)">
+	<option>Proxy Name</option>
+	</select>
+	<h3>Select Server Name</h3>
+	<select id="svname" onChange="drawGraph(this.value)">
+	<option>Server Name</option>
+	</select>
+</body>
+</html>
