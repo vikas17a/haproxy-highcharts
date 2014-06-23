@@ -113,7 +113,7 @@
 			//clearTimeout(timer);
 			//$('#container').highcharts().destroy();
 	}	
-	function dosomething(level, name, pxname,id) {
+	function getOptions(level, name, pxname,id) {
 		$.getJSON('/rest/render/?level='+level+'&name='+name+'&pxname='+pxname, function(data) {
 			var select = document.getElementById(id);
 			for ( var index in data) {
@@ -127,32 +127,54 @@
 		});
 	}
 	function removeOptions(id){
-		var select = document.getElementById(id);
-		var length = select.options.length;
-		for (i = 1; i < length; i++) {
-		  select.options[i] = null;
-		}		
+		document.getElementById(id).innerHTML = "";
+		var option = document.createElement('option');
+		option.value = '';
+		option.text = 'Drop it down';
+		document.getElementById(id).add(option);
+		
 	}
 	function getpxname(name) {
 		removeOptions('pxname');
+		removeOptions('svname');
 		this.name = name;
-		dosomething(1,name,pxname,'pxname');
+		getOptions(1,name,pxname,'pxname');
 	}
 	function getsvname(pxname) {
 		removeOptions('svname');
 		this.pxname = pxname;
-		dosomething(2,name,pxname,'svname');
+		getOptions(2,name,pxname,'svname');
 	}
 	function drawGraph(svname) {
 		this.svname = svname;
 		chart(this.name, this.svname, this.pxname);
 	}
-	dosomething(0,name,pxname,'name');
+	getOptions(0,name,pxname,'name');
+	
+	function removeBox(){
+		var response = confirm ('Are you sure ?');
+		if(response == true){
+			$.get('/rest/remove/?name='+name+'&pxname='+pxname+'&svname='+svname, function(data, status) {
+				if(data == 'OK')
+					window.location = '/';
+				else
+					alert('Could not delete some error occured that\'s all i know');
+			});
+		}
+	}
+	
+	function groupTogether(){
+		$.getJSON('/rest/render/?level=2&name='+name+'&pxname='+pxname, function(data) {
+			
+		});
+	}
 	
 	</script>
 </head>
 <body>
 	<button onClick="window.location=/new/">Add new cluster</button>
+	<button onClick="removeBox()">Delete this box</button>
+	<button onClick="groupTogether()">Group Together</button>
 	<h3 style="display:inline">Select Name</h3>
 	<select id="name" onChange="getpxname(this.value);" style="display:inline">
 	<option>Name</option>

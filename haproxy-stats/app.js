@@ -19,12 +19,6 @@ MongoClient.connect('mongodb://127.0.0.1:27017/stats', function(err, database) {
 		throw err;
 	db = database;
 });
-/*var responseFile = "prod-haproxy";
-var responseFile2 = "api-haproxy";
-
-var urlRequest = "http://healthkart:adw38&6cdQE@healthkart.com/haproxy?stats;csv;norefresh";
-var urlRequest2 = "http://healthkart:adw38&6cdQE@api.healthkart.com/haproxy?stats;csv;norefresh";
-*/
 function getStats(cluster, urlRequest, responseFile) {
 	http.get(
 			urlRequest,
@@ -54,9 +48,9 @@ function getStats(cluster, urlRequest, responseFile) {
 			}).on('error', function(e) {
 		console.log(new Date() + " Got error: " + e);
 	});
-	//setTimeout(function() {
-	//	getStats(cluster, urlRequest, responseFile);
-	//}, 10000);
+	// setTimeout(function() {
+	// getStats(cluster, urlRequest, responseFile);
+	// }, 10000);
 }
 
 /** ** Parsing of csv to json ************** */
@@ -172,8 +166,8 @@ function parsingJson(cluster, responseFile) {
 	});
 }
 
-//getStats('prod', urlRequest, responseFile);
-//getStats('api', urlRequest2, responseFile2);
+// getStats('prod', urlRequest, responseFile);
+// getStats('api', urlRequest2, responseFile2);
 
 // all environments
 app.set('port', process.env.PORT || 8080);
@@ -191,6 +185,15 @@ app.engine('html', require('ejs').renderFile);
 if ('development' == app.get('env')) {
 	app.use(express.errorHandler());
 }
+
+var basicAuth = express.basicAuth;
+var auth = function(req, res, next) {
+	basicAuth(function(user, pass, callback) {
+		callback(null, user === 'rahul' && pass === 'rahul@hk');
+	})(req, res, next);
+};
+
+app.all('*', auth);
 
 app.get('/', function(req, res) {
 	res.render("index.html");
@@ -291,66 +294,99 @@ app.get('/rest/new/', function(req, res) {
 	}
 });
 
-app.get('/rest/render/', function(req, res) {
-	var name = req.query['name'];
-	var pxname = req.query['pxname'];
-	var level = req.query['level'];
-	var query;
+app
+		.get(
+				'/rest/render/',
+				function(req, res) {
+					var name = req.query['name'];
+					var pxname = req.query['pxname'];
+					var level = req.query['level'];
+					var query;
+					connect_to_mysql();
+					mysql_connection.connect();
+					if (level == 0) {
+						query = "SELECT DISTINCT(name) from url_haproxy";
+						mysql_connection.query(query, function(err, rows) {
+							if (err)
+								mysq_connection.end();
+							else
+								res.send(rows);
+						});
+					} else if (level == 1) {
+						query = "SELECT DISTINCT(pxname) from url_haproxy where name = ?";
+						var params = [ name ];
+						mysql_connection.query(query, params, function(err,
+								rows) {
+							if (err) {
+								mysq_connection.end();
+							} else {
+								res.send(rows);
+							}
+						});
+					} else if (level == 2) {
+						query = "SELECT DISTINCT(svname) from url_haproxy where name = ? and pxname = ?";
+						var params = [ name, pxname ];
+						mysql_connection.query(query, params, function(err,
+								rows) {
+							if (err) {
+								mysq_connection.end();
+							} else {
+								res.send(rows);
+							}
+						});
+					}
+
+				});
+
+app
+		.get(
+				'/rest/remove/',
+				function(req, res) {
+					connect_to_mysql();
+					var query = "DELETE FROM url_haproxy where name=? and pxname=? and svname=?;";
+					var param = [ req.query['name'], req.query['pxname'],
+							req.query['svname'] ];
+					mysql_connection.query(query, param, function(err, result) {
+						if (err)
+							console.log(new Date() + ' ERROR : ' + err);
+						else
+							console.log(new Date() + 'Success ' + result);
+						mysql_connection.end();
+						res.send('OK');
+					});
+				});
+
+/* Not in Use
+ * 
+ * app.get('/auth/', function(req, res) {
 	connect_to_mysql();
-	mysql_connection.connect();
-	if(level == 0){
-		query = "SELECT DISTINCT(name) from url_haproxy";
-		mysql_connection.query(query, function(err, rows){
-			if(err)
-				mysq_connection.end();
-			else
-				res.send(rows);
-		});
-	}
-	else if (level == 1){
-		query = "SELECT DISTINCT(pxname) from url_haproxy where name = ?";
-		var params = [name];
-		mysql_connection.query(query, params, function(err, rows){
-			if(err){
-				mysq_connection.end();
-			}
-			else{
-				res.send(rows);
-			}
-		});
-	}
-	else if (level == 2){
-		query = "SELECT DISTINCT(svname) from url_haproxy where name = ? and pxname = ?";
-		var params = [name, pxname];
-		mysql_connection.query(query, params, function(err, rows){
-			if(err){
-				mysq_connection.end();
-			}
-			else{
-				res.send(rows);
-			}
-		});
-	}
-	
-});
+	var query = "SELECT user FROM user_auth where user = ? and pass = ?;";
+	var param = [ req.query['user'], req.query['pass']];
+	mysql_connection.query(query, param, function(err, result){
+		if(result.length > 0){
+			res.render('index.html');
+		}
+		else{
+			res.send('Access Denied');
+		}
+		mysql_connection.end();
+	});
+});*/
 
-app.get('/test/', function(req, res){
-	res.render('test_index.html');
-});
-
-function getData(){
+function getData() {
 	connect_to_mysql();
 	var query = "SELECT DISTINCT(name), url FROM url_haproxy";
-	mysql_connection.query(query, function(err, rows){
-		if(err)
+	mysql_connection.query(query, function(err, rows) {
+		if (err)
 			console.log(err);
 		else
-			for(var index in rows){
-				getStats(rows[index]['name'], rows[index]['url'], rows[index]['name'] + '-haproxy');
+			for ( var index in rows) {
+				getStats(rows[index]['name'], rows[index]['url'],
+						rows[index]['name'] + '-haproxy');
 			}
 		mysql_connection.end();
 	});
-	setTimeout(getData, 10000);	
+	setTimeout(getData, 10000);
 }
 
 getData();
