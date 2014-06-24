@@ -170,7 +170,7 @@ function parsingJson(cluster, responseFile) {
 // getStats('api', urlRequest2, responseFile2);
 
 // all environments
-app.set('port', process.env.PORT || 8080);
+app.set('port', process.env.PORT || 8084);
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 app.use(express.favicon());
@@ -236,10 +236,10 @@ app.get('/rest/live/', function(req, res) {
 		try {
 			var sendObj = {};
 			var myObj = CSV2JSON(data, 1);
-			console.log(myObj);
+			//console.log(myObj);
 			var rendObj = eval('(' + myObj + ')');
 			eventEmmit.once('json_parsed_zero', function() {
-				console.log('Hello');
+				console.log(new Date() + ' File parsed for live request');
 			});
 			for ( var index in rendObj) {
 				if (rendObj[index]['# pxname'] == req.query['pxname']
@@ -264,7 +264,7 @@ function connect_to_mysql() {
 	mysql_connection = mysql.createConnection({
 		host : 'localhost',
 		user : 'root',
-		password : '',
+		password : 'k1hrL71oZY8X3AqkRf9f',
 		database : 'haproxy_nodejs'
 	});
 }
@@ -277,7 +277,7 @@ app.get('/rest/new/', function(req, res) {
 	connect_to_mysql();
 	mysql_connection.connect();
 	if (url != '' && name != '' && svname != '') {
-		var query = 'INSERT INTO url_haproxy VALUES(\'\',?,?,?,?)';
+		var query = "INSERT INTO url_haproxy(url, pxname, name, svname) VALUES(?,?,?,?)";
 		var insert = [ url, pxname, name, svname ];
 		mysql_connection.query(query, insert, function(err, results) {
 			if (err) {
@@ -294,67 +294,59 @@ app.get('/rest/new/', function(req, res) {
 	}
 });
 
-app
-		.get(
-				'/rest/render/',
-				function(req, res) {
-					var name = req.query['name'];
-					var pxname = req.query['pxname'];
-					var level = req.query['level'];
-					var query;
-					connect_to_mysql();
-					mysql_connection.connect();
-					if (level == 0) {
-						query = "SELECT DISTINCT(name) from url_haproxy";
-						mysql_connection.query(query, function(err, rows) {
-							if (err)
-								mysq_connection.end();
-							else
-								res.send(rows);
-						});
-					} else if (level == 1) {
-						query = "SELECT DISTINCT(pxname) from url_haproxy where name = ?";
-						var params = [ name ];
-						mysql_connection.query(query, params, function(err,
-								rows) {
-							if (err) {
-								mysq_connection.end();
-							} else {
-								res.send(rows);
-							}
-						});
-					} else if (level == 2) {
-						query = "SELECT DISTINCT(svname) from url_haproxy where name = ? and pxname = ?";
-						var params = [ name, pxname ];
-						mysql_connection.query(query, params, function(err,
-								rows) {
-							if (err) {
-								mysq_connection.end();
-							} else {
-								res.send(rows);
-							}
-						});
-					}
+app.get('/rest/render/',function(req, res) {
+	var name = req.query['name'];
+	var pxname = req.query['pxname'];
+	var level = req.query['level'];
+	var query;
+	connect_to_mysql();
+	mysql_connection.connect();
+	if (level == 0) {
+		query = "SELECT DISTINCT(name) from url_haproxy";
+		mysql_connection.query(query, function(err, rows) {
+			if (err)
+				mysq_connection.end();
+			else
+				res.send(rows);
+		});
+	} else if (level == 1) {
+		query = "SELECT DISTINCT(pxname) from url_haproxy where name = ?";
+		var params = [ name ];
+		mysql_connection.query(query, params, function(err,rows) {
+			if (err) {
+				mysq_connection.end();
+			} else {
+				res.send(rows);
+			}
+		});
+	} else if (level == 2) {
+		query = "SELECT DISTINCT(svname) from url_haproxy where name = ? and pxname = ?";
+		var params = [ name, pxname ];
+		mysql_connection.query(query, params, function(err,rows) {
+			if (err) {
+				mysq_connection.end();
+			} else {
+				res.send(rows);
+			}
+		});
+	}
+	mysql_connection.end();
+});
 
-				});
-
-app
-		.get(
-				'/rest/remove/',
-				function(req, res) {
-					connect_to_mysql();
-					var query = "DELETE FROM url_haproxy where name=? and pxname=? and svname=?;";
-					var param = [ req.query['name'], req.query['pxname'],
-							req.query['svname'] ];
-					mysql_connection.query(query, param, function(err, result) {
-						if (err)
-							console.log(new Date() + ' ERROR : ' + err);
-						else
-							console.log(new Date() + 'Success ' + result);
-						mysql_connection.end();
-						res.send('OK');
-					});
-				});
+app.get('/rest/remove/',function(req, res) {
+	connect_to_mysql();
+	mysql_connection.connect();
+	var query = "DELETE FROM url_haproxy where name=? and pxname=? and svname=?;";
+	var param = [ req.query['name'], req.query['pxname'],req.query['svname'] ];
+	mysql_connection.query(query, param, function(err, result) {
+		if (err)
+			console.log(new Date() + ' ERROR : ' + err);
+		else
+			console.log(new Date() + 'Success ' + result);
+			mysql_connection.end();
+			res.send('OK');
+	});
+});
 
 /* Not in Use
  * 
@@ -373,22 +365,30 @@ app
 	});
 });*/
 
-function getData() {
+var db_rows;
+
+function getVal(){
 	connect_to_mysql();
+	mysql_connection.connect();
 	var query = "SELECT DISTINCT(name), url FROM url_haproxy";
-	mysql_connection.query(query, function(err, rows) {
+        mysql_connection.query(query, function(err, rows) {
 		if (err)
 			console.log(err);
-		else
-			for ( var index in rows) {
-				getStats(rows[index]['name'], rows[index]['url'],
-						rows[index]['name'] + '-haproxy');
-			}
+		else{
+			db_rows = rows;
+		}
 		mysql_connection.end();
 	});
-	setTimeout(getData, 10000);
 }
 
+function getData() {
+	for ( var index in db_rows) {
+		getStats(db_rows[index]['name'], db_rows[index]['url'], db_rows[index]['name'] + '-haproxy');
+	}
+	setTimeout(getData, 5000);
+}
+
+getVal();
 getData();
 
 http.createServer(app).listen(app.get('port'), function() {

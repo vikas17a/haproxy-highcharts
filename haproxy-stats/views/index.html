@@ -23,8 +23,8 @@
 		if(box == '' || svname == ''){
 			return;
 		}
-		var url = 'http://localhost:8080/rest/load/?pxname='+pxname+'&box='+box+'&svname='+svname;
-		var url2 = 'http://localhost:8080/rest/live/?pxname='+pxname+'&box='+box+'&svname='+svname;
+		var url = '/rest/load/?pxname='+pxname+'&box='+box+'&svname='+svname;
+		var url2 = '/rest/live/?pxname='+pxname+'&box='+box+'&svname='+svname;
 		$.getJSON(url, function(data) {
 			// Create the chart
 				Highcharts.setOptions({
@@ -174,7 +174,7 @@
 <body>
 	<button onClick="window.location=/new/">Add new cluster</button>
 	<button onClick="removeBox()">Delete this box</button>
-	<button onClick="groupTogether()">Group Together</button>
+	<!--button onClick="groupTogether()">Group Together</button-->
 	<h3 style="display:inline">Select Name</h3>
 	<select id="name" onChange="getpxname(this.value);" style="display:inline">
 	<option>Name</option>
