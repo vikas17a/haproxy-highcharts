@@ -196,6 +196,7 @@ var auth = function(req, res, next) {
 app.all('*', auth);
 
 app.get('/', function(req, res) {
+	getVal();
 	res.render("index.html");
 });
 
