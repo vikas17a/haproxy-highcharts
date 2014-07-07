@@ -1,0 +1,5 @@
+# pxname,svname,qcur,qmax,scur,smax,slim,stot,bin,bout,dreq,dresp,ereq,econ,eresp,wretr,wredis,status,weight,act,bck,chkfail,chkdown,lastchg,downtime,qlimit,pid,iid,sid,throttle,lbtot,tracked,type,rate,rate_lim,rate_max,check_status,check_code,check_duration,hrsp_1xx,hrsp_2xx,hrsp_3xx,hrsp_4xx,hrsp_5xx,hrsp_other,hanafail,req_rate,req_rate_max,req_tot,cli_abrt,srv_abrt,comp_in,comp_out,comp_byp,comp_rsp,
+http-in,FRONTEND,,,9,158,5000,4195438,3689720646,28373255458,0,0,38541,,,,,OPEN,,,,,,,,,1,2,0,,,,0,27,0,117,,,,0,3705181,402823,85751,1165,509,,27,117,4195438,,,0,0,0,0,
+hkadmin,admin-262,0,0,3,156,,2092535,2128059588,16208682699,,0,,0,490,56,6,UP,1,1,0,298,100,1073,6962,,1,3,1,,1370500,,2,16,,86,L7OK,200,3,27048,1818693,247277,26008,2,0,0,,,,1688,250,,,,,
+hkadmin,admin-267,0,0,5,122,,1820216,1499330544,11753460593,,0,,0,503,108,10,UP,1,1,0,211,114,48056,5865,,1,3,2,,1372242,,2,9,,57,L7OK,200,2,27513,1644712,155546,19330,4,0,0,,,,1478,250,,,,,
+hkadmin,BACKEND,0,0,8,158,500,3913217,3628865856,27962280244,0,0,,646,993,164,16,UP,2,2,0,,2,165388,242,,1,3,0,,2742742,,1,26,,117,,,,0,3463403,402823,45338,1164,481,,,,,3166,500,0,0,0,0,

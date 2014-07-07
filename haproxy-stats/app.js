@@ -205,8 +205,13 @@ app.get('/rest/load/', function(req, res) {
 	var orignal_cluster = req.query['pxname'].replace(/-/g, "_");
 	var collection_name = req.query['box'] + '_' + orignal_cluster;
 	var collection = db.collection(collection_name);
+	var current_date = new Date();
+	var yesterday_date = current_date.setHours(current_date.getHours() - 24);
+	collection.ensureIndex("timestamp",function(){ 
+		console.log(new Date() + ' Indexed collection in mongo');
+	});
 	collection.find({
-		"svname" : svname
+		"svname" : svname, "timestamp" : { $gt: yesterday_date }
 	}).toArray(function(err, result) {
 		if (err) {
 			console.log(new Date() + ' ERROR: ' + err);
@@ -217,7 +222,7 @@ app.get('/rest/load/', function(req, res) {
 			"data" : []
 		};
 		for ( var index in result) {
-			var rate = parseInt(result[index]["rate"]);
+			var rate = parseInt(result[index]["scur"]);
 			var date = parseInt(result[index]["timestamp"]);
 			obj["data"].push([ date, rate ]);
 		}
@@ -246,7 +251,7 @@ app.get('/rest/live/', function(req, res) {
 				if (rendObj[index]['# pxname'] == req.query['pxname']
 						&& rendObj[index]["svname"] == req.query['svname']) {
 					sendObj['timestamp'] = Date.now();
-					sendObj['rate'] = parseInt(rendObj[index]['rate']);
+					sendObj['rate'] = parseInt(rendObj[index]['scur']);
 				}
 			}
 			res.send(sendObj);
@@ -386,7 +391,7 @@ function getData() {
 	for ( var index in db_rows) {
 		getStats(db_rows[index]['name'], db_rows[index]['url'], db_rows[index]['name'] + '-haproxy');
 	}
-	setTimeout(getData, 5000);
+	setTimeout(getData, 10000);
 }
 
 getVal();
