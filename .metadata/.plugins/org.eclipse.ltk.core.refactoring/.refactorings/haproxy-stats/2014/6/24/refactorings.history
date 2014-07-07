@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Rename resource &apos;haproxy-stats/views/index.ejs&apos; to &apos;index.html&apos;" description="Rename resource &apos;index.ejs&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="views/index.ejs" name="index.html" stamp="1402334883883" updateReferences="true"/>
-</session>

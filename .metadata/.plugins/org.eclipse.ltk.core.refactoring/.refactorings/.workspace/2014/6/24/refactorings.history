@@ -1,3 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">&#x0A;<refactoring comment="Delete resource &apos;haproxy-stats/prod-haproxy.txt&apos;" deleteContents="false" description="Delete resource &apos;haproxy-stats/prod-haproxy.txt&apos;" element1="/haproxy-stats/prod-haproxy.txt" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1402395100344"/>&#x0A;<refactoring comment="Delete resource &apos;haproxy-stats/node_modules/sync&apos;" deleteContents="false" description="Delete resource &apos;haproxy-stats/node_modules/sync&apos;" element1="/haproxy-stats/node_modules/sync" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1402397064541"/>
-</session>
