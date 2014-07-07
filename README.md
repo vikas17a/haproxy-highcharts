@@ -10,7 +10,6 @@ Requirements
 2. Installed mongodb
 
 Commands to install dependencies above on Ubuntu
-------------------------------------------------
 
 1. sudo apt-get install nodejs
 2. sudo apt-get install mongodb
