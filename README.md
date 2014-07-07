@@ -78,8 +78,7 @@ Description of functions
 
 Note : Formatted data which these functions except to be in respective cluster file are as follows:
 
-"
-\# pxname,svname,qcur,qmax,scur,smax,slim,stot,bin,bout,dreq,dresp,ereq,econ,eresp,wretr,wredis,status,weight,act,bck,chkfail,chkdown,lastchg,downtime,qlimit,pidid,throttle,lbtot,tracked,type,rate,rate_lim,rate_max,check_status,check_code,check_duration,hrsp_1xx,hrsp_2xx,hrsp_3xx,hrsp_4xx,hrsp_5xx,hrsp_other,hanafail,req_rate,req_rate_max,req_tot,cli_abrt,srv_abrt,comp_in,comp_out,comp_byp,comp_rsp,
+|-- "# pxname,svname,qcur,qmax,scur,smax,slim,stot,bin,bout,dreq,dresp,ereq,econ,eresp,wretr,wredis,status,weight,act,bck,chkfail,chkdown,lastchg,downtime,qlimit,pidid,throttle,lbtot,tracked,type,rate,rate_lim,rate_max,check_status,check_code,check_duration,hrsp_1xx,hrsp_2xx,hrsp_3xx,hrsp_4xx,hrsp_5xx,hrsp_other,hanafail,req_rate,req_rate_max,req_tot,cli_abrt,srv_abrt,comp_in,comp_out,comp_byp,comp_rsp,
 http-in,FRONTEND,,,4,627,5000,34008887,9278122770,570299368822,0,0,3720,,,,,OPEN,,,,,,,,,1,1,0,,,,0,60,0,646,,,,0,34000463,0,4561,3775,84,,60,648,34008887,,,0,0,0,0,
 healthkart,spkd-0210,0,1,1,39,40,8475211,2318727321,142177296395,,0,,0,95,278,35,UP,1,1,0,38,17,3795,1177,,1,2,1,,8466349,,2,14,,535,L7OK,200,1,8895,8473675,0,342,826,0,0,,,,8,12,,,,,
 healthkart,spkd-0211,0,0,1,17,40,8476774,2319644869,142671307531,,0,,0,75,160,20,UP,1,1,0,27,12,3569,1191,,1,2,2,,8471054,,2,14,,218,L7OK,200,1,9100,8475461,0,213,844,0,0,,,,15,17,,,,,
