@@ -63,16 +63,22 @@ Files in Repository
 
 Description of functions
 ========================
- --> MongoClient.connect 
+--> MongoClient.connect 
 		This connects the mongodb server with this application.
 		Note: Start mongodb server with command as "mongod --dbpath /PATH/TO/DB/FOLDER/OF/THIS/PROJECT/"
- --> getStats
+
+
+--> getStats
 		This function requests h`onable haproxy to get the haproxy results and stores them in the repsective file ex api-haproxy. This functions by default take care of new files to be created for new cluster.
 
- --> CSVToArray && CSV2JSON 
+
+--> CSVToArray && CSV2JSON 
 		These functions parse the cvs formatted data just arrived from haproxy and will convert the parsed cvs into the JSON fformat to be intesrted in MONGODB. These functions will throw exceptions if data recieved from haproxy is not formatted properly
-		Note : Formatted data which these functions except to be in respective cluster file are as follows : 
-			# pxname,svname,qcur,qmax,scur,smax,slim,stot,bin,bout,dreq,dresp,ereq,econ,eresp,wretr,wredis,status,weight,act,bck,chkfail,chkdown,lastchg,downtime,qlimit,pidid,throttle,lbtot,tracked,type,rate,rate_lim,rate_max,check_status,check_code,check_duration,hrsp_1xx,hrsp_2xx,hrsp_3xx,hrsp_4xx,hrsp_5xx,hrsp_other,hanafail,req_rate,req_rate_max,req_tot,cli_abrt,srv_abrt,comp_in,comp_out,comp_byp,comp_rsp,
+
+
+Note : Formatted data which these functions except to be in respective cluster file are as follows:
+--------------------------------------------------------------------------------------------------- 			
+# pxname,svname,qcur,qmax,scur,smax,slim,stot,bin,bout,dreq,dresp,ereq,econ,eresp,wretr,wredis,status,weight,act,bck,chkfail,chkdown,lastchg,downtime,qlimit,pidid,throttle,lbtot,tracked,type,rate,rate_lim,rate_max,check_status,check_code,check_duration,hrsp_1xx,hrsp_2xx,hrsp_3xx,hrsp_4xx,hrsp_5xx,hrsp_other,hanafail,req_rate,req_rate_max,req_tot,cli_abrt,srv_abrt,comp_in,comp_out,comp_byp,comp_rsp,
 http-in,FRONTEND,,,4,627,5000,34008887,9278122770,570299368822,0,0,3720,,,,,OPEN,,,,,,,,,1,1,0,,,,0,60,0,646,,,,0,34000463,0,4561,3775,84,,60,648,34008887,,,0,0,0,0,
 healthkart,spkd-0210,0,1,1,39,40,8475211,2318727321,142177296395,,0,,0,95,278,35,UP,1,1,0,38,17,3795,1177,,1,2,1,,8466349,,2,14,,535,L7OK,200,1,8895,8473675,0,342,826,0,0,,,,8,12,,,,,
 healthkart,spkd-0211,0,0,1,17,40,8476774,2319644869,142671307531,,0,,0,75,160,20,UP,1,1,0,27,12,3569,1191,,1,2,2,,8471054,,2,14,,218,L7OK,200,1,9100,8475461,0,213,844,0,0,,,,15,17,,,,,
@@ -83,22 +89,39 @@ healthkart,BACKEND,0,585,3,626,500,33812800,9242680001,569940239014,0,0,,0,323,8
 --> parsingJson
 		This function calls the above mentioned function for CVS to JSON parsing and will require paramters as the cluster name i.e admin, prod or api and the Name of the file where the data is fetched from haproxy.
 
+
 --> onLoad (app.get)
 		This function will load all the one day back data from the mongoDb and return this as a json object in response.
+
+
 --> onLive (app.get)
 		This function will fetch the live stats one point at a given time. This data point is appended to old chart.
+
+
 --> onNew (app.get)
 		This will add new cluster to mysql database
+
+
 --> connectToMysql ()
 		This function keep details of mysql database and connect the application to database whenever it is called
+
+
 --> onNew (app.get)
 		This function update the mysql database with field entries entered by the user on the HTML page.
+
+
 --> onRemove (app.get)
 		This function activates on remove request to delete cluster from mysql database.
+
+
 --> getVal
 		This function extracts the url, proxy name etc from mysql datbase so that getStats & getData can request that url
+
+
 --> getData
 		This function initiates the application
+
+
 
 How to Run this application
 ===========================
