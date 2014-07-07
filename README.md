@@ -61,7 +61,8 @@ Files in Repository
       	- style.css ## This is the css of the html page need to be linked through html page.
 
 Description of functions
-========================
+------------------------
+
 - MongoClient.connect 
 		This connects the mongodb server with this application.
 		Note: Start mongodb server with command as "mongod --dbpath /PATH/TO/DB/FOLDER/OF/THIS/PROJECT/"
