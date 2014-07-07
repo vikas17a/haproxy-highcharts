@@ -40,17 +40,17 @@ Directory Structure
 
 Files in Repository
 -------------------
-  -- haproxy-stats 
-      |- .jshintrc ## NodeEclipse File  ##
-      |- .project ## NodeEclipse Project File ##
-      |- admin-haproxy ## File captures admin cluster this will be created automatically on runtime ##
-      |- api-haproxy ## File captures api cluster this will be created automatically on runtime ##
-      |- app.js ## This is the source file that have all functions and functionning of the whole project ##
-      |- dump.sql ## This is a mysql dump file to be dummpled onto th mysql to get this applicaiton running
-      |- nohup.out ## This is the log files of this application ##
-      |- pakage.json ## This is the package file which install all nodejs dependincies to run this application ##
-      |- prod-haproxy ## File caputures prod cluster this will be created automatically on runtime ##
-      |- stagnew-haproxy ## File captures stagnew cluster this will be created automatically on runtime ##
+  --haproxy-stats 
+      |-- .jshintrc ## NodeEclipse File  ##
+      |-- .project ## NodeEclipse Project File ##
+      |-- admin-haproxy ## File captures admin cluster this will be created automatically on runtime ##
+      |-- api-haproxy ## File captures api cluster this will be created automatically on runtime ##
+      |-- app.js ## This is the source file that have all functions and functionning of the whole project ##
+      |-- dump.sql ## This is a mysql dump file to be dummpled onto th mysql to get this applicaiton running
+      |-- nohup.out ## This is the log files of this application ##
+      |-- pakage.json ## This is the package file which install all nodejs dependincies to run this application ##
+      |-- prod-haproxy ## File caputures prod cluster this will be created automatically on runtime ##
+      |-- stagnew-haproxy ## File captures stagnew cluster this will be created automatically on runtime ##
 
       --views
           |-- add_new.html ## This page is rendered when user is willing to add a new cluster
